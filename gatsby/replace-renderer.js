@@ -5,6 +5,7 @@ import { configureStore } from '../src/store/configureStore';
 
 /**
  * Add `react-redux` provider to the page (server-side).
+ *
  * @param bodyComponent
  * @param replaceBodyHTMLString
  */

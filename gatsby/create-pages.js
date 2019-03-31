@@ -4,9 +4,11 @@ const yaml = require('js-yaml');
 const fs = require('fs');
 
 const TEMPLATE_DIR = path.resolve(__dirname, '../src/templates');
+const CONTENT_DIR = path.resolve(__dirname, '../src/content');
 
 /**
  * Create node data that can be used with `createNode`.
+ *
  * @param data
  * @param id
  * @param type
@@ -35,6 +37,7 @@ const createNodeData = (data, id, type, actions) => {
 
 /**
  * Get all pages.
+ *
  * @param actions
  * @return {Promise<*[]>}
  */
@@ -65,6 +68,7 @@ const getPages = async actions => {
 
 /**
  * Register a page to Gatsby.
+ *
  * @param page
  * @param actions
  */
@@ -83,6 +87,7 @@ const registerPage = (page, actions) => {
 
 /**
  * Get all icons in `assets/images/icons` and parse them as a key-value object.
+ *
  * @param actions
  * @return {Promise<*>}
  */
@@ -112,6 +117,7 @@ const getIcons = async actions => {
 
 /**
  * Add icon to categories.
+ *
  * @param actions
  * @return {void}
  */
@@ -157,11 +163,11 @@ const getCategories = async actions => {
 
 /**
  * Register a category to Gatsby.
+ *
  * @param category
  * @param actions
- * @return *{}
  */
-const registerCategory = async (category, actions) => {
+const registerCategory = (category, actions) => {
   const { createPage } = actions;
 
   createPage({
@@ -173,16 +179,71 @@ const registerCategory = async (category, actions) => {
   });
 };
 
+/**
+ * Register a troubleshooter page to Gatsby.
+ *
+ * @param troubleshooterNode
+ * @param actions
+ */
+const registerTroubleshooterNode = (troubleshooterNode, actions) => {
+  const { createPage } = actions;
+
+  createPage({
+    path: `/${troubleshooterNode.slug}`,
+    component: path.join(TEMPLATE_DIR, 'troubleshooter.tsx'),
+    context: {
+      slug: troubleshooterNode.slug,
+      relativePath: troubleshooterNode.relativePath
+    }
+  });
+};
+
+/**
+ * Register all troubleshooter nodes to Gatsby.
+ *
+ * @param actions
+ * @returns {Promise<void>}
+ */
+const registerTroubleshooterNodes = async actions => {
+  const { graphql } = actions;
+
+  const { data } = await graphql(`
+    query {
+      allTroubleshooterNode {
+        edges {
+          node {
+            absolutePath
+            relativePath
+            slug
+          }
+        }
+      }
+    }
+  `);
+
+  if (data) {
+    data.allTroubleshooterNode.edges
+      .map(edge => edge.node)
+      .forEach(node => registerTroubleshooterNode(node, actions));
+  }
+};
+
+/**
+ * Register top level redirects (from `redirects.yml` to Gatsby.
+ *
+ * @param actions
+ */
 const registerTopLevelRedirects = actions => {
-  const { createRedirect } = actions;
+  const { createRedirect, reporter } = actions;
 
   let file;
   try {
-    file = fs.readFileSync(path.join(__dirname, '../src/content/redirects.yml'), 'utf-8');
+    file = fs.readFileSync(path.resolve(CONTENT_DIR, 'redirects.yml'), 'utf-8');
   } catch (error) {
-    // Ignore error if file does not exist
-    if (error.code !== 'ENOENT') {
-      throw error;
+    if (error.code === 'ENOENT') {
+      reporter.warn('`redirects.yml` file not found, redirects will not be registered');
+    } else {
+      reporter.panic(error);
     }
   }
 
@@ -201,7 +262,8 @@ const registerTopLevelRedirects = actions => {
 };
 
 /**
- * Setup redirects of a page.
+ * Setup redirects for a page.
+ *
  * @param page
  * @param actions
  * @return {void}
@@ -217,20 +279,10 @@ const registerPageRedirects = (page, actions) => {
   });
 };
 
-/**
- * Register categories and pages.
- * @param getNodes
- * @param actions
- * @param createNodeId
- * @param graphql
- * @return {Promise<void>}
- */
-module.exports = async ({ actions, createNodeId, graphql, getNodes }) => {
+module.exports = async ({ actions, ...rest }) => {
   const gatsbyActions = {
     ...actions,
-    createNodeId,
-    graphql,
-    getNodes
+    ...rest
   };
 
   await addIconsToCategories(gatsbyActions);
@@ -244,6 +296,8 @@ module.exports = async ({ actions, createNodeId, graphql, getNodes }) => {
     registerPage(page, gatsbyActions);
     registerPageRedirects(page, gatsbyActions);
   });
+
+  await registerTroubleshooterNodes(gatsbyActions);
 
   registerTopLevelRedirects(gatsbyActions);
 };

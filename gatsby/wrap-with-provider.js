@@ -6,6 +6,7 @@ const store = configureStore();
 
 /**
  * Add `react-redux` provider to the page (client-side).
+ *
  * @param history
  * @return {function({children: *}): *}
  */

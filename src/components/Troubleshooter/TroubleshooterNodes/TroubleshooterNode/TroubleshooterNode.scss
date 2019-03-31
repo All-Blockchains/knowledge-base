@@ -1,0 +1,22 @@
+@import '../../../../sass/variables/colors';
+
+.troubleshooter-node {
+  display: block;
+  padding: 15px 10px;
+  border-bottom: 1px solid $alt-border-color;
+  position: relative;
+  color: $darker-text-color;
+
+  &-description {
+    font-size: 1.3rem;
+    color: $alt-dark-text-color;
+  }
+
+  &-caret {
+    position: absolute;
+    right: 10px;
+    vertical-align: middle;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}

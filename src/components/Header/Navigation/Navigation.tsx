@@ -6,7 +6,7 @@ import Link from 'gatsby-link';
 import Search from '../../Search/Search';
 import MobileNavigation from './MobileNavigation/MobileNavigation';
 import ExternalLink from '../../ExternalLink/ExternalLink';
-import Caret from './Caret/Caret';
+import Caret from '../../ui/Caret/Caret';
 import './Navigation.scss';
 
 interface Props {
@@ -47,6 +47,12 @@ class Navigation extends React.PureComponent<Props, State> {
                 </Link>
               </li>
               <li>
+                <Link to="/troubleshooter" activeClassName="active">
+                  Troubleshooting
+                  <Caret />
+                </Link>
+              </li>
+              <li>
                 <Link to="/contact-us" activeClassName="active">
                   Contact us
                   <Caret />
@@ -61,7 +67,7 @@ class Navigation extends React.PureComponent<Props, State> {
             </ul>
           </div>
           {showSearch && (
-            <div className="col-xs-12 col-md-offset-2 col-md-4 col-gutter-lr last-md xs-end align-end navigation-search">
+            <div className="col-xs-12 col-md-offset-3 col-md-3 col-lg-offset-2 col-lg-4 col-gutter-lr last-md xs-end align-end navigation-search">
               <Search />
             </div>
           )}

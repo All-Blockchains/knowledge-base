@@ -1,0 +1,8 @@
+@import '../../../sass/variables/variables';
+@import '../../../sass/variables/colors';
+
+.troubleshooter-nodes {
+  border-radius: $border-radius;
+  border: 1px solid $alt-border-color;
+  border-bottom: none;
+}

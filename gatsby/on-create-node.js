@@ -4,6 +4,7 @@ const fs = require('fs');
 
 /**
  * Parse YAML data of categories.
+ *
  * @param node
  * @param actions
  * @param createNodeId

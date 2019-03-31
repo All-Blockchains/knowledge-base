@@ -3,7 +3,7 @@ import * as classNames from 'classnames';
 import { Link } from 'gatsby';
 import './MobileNavigation.scss';
 import ExternalLink from '../../../ExternalLink/ExternalLink';
-import Caret from '../Caret/Caret';
+import Caret from '../../../ui/Caret/Caret';
 
 interface Props {
   isVisible: boolean;
@@ -15,6 +15,12 @@ const MobileNavigation: React.StatelessComponent<Props> = ({ isVisible }) => (
       <li>
         <Link to="/">
           Knowledge base
+          <Caret />
+        </Link>
+      </li>
+      <li>
+        <Link to="/troubleshooter">
+          Troubleshooting
           <Caret />
         </Link>
       </li>

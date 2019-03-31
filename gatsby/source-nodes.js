@@ -3,7 +3,21 @@ const minimatch = require('minimatch');
 const removeMarkdown = require('remove-markdown');
 
 /**
+ * Get a sha256 hash from an input string.
+ *
+ * @param input
+ * @returns {string}
+ */
+const createHash = input => {
+  return crypto
+    .createHash('sha256')
+    .update(input)
+    .digest('hex');
+};
+
+/**
  * Create node data that can be used with `createNode`.
+ *
  * @param data
  * @param id
  * @param type
@@ -22,21 +36,19 @@ const createNodeData = (data, id, type, actions) => {
     internal: {
       type,
       content: nodeContent,
-      contentDigest: crypto
-        .createHash('md5')
-        .update(nodeContent)
-        .digest('hex')
+      contentDigest: createHash(nodeContent)
     }
   };
 };
 
 /**
- * Get page data from a File node.
+ * Get markdown data from a File node.
+ *
  * @param node
  * @param actions
  * @return {*}
  */
-const getPageData = (node, actions) => {
+const getMarkdownData = (node, actions) => {
   const { getNode } = actions;
 
   return node.children
@@ -46,6 +58,7 @@ const getPageData = (node, actions) => {
 
 /**
  * Get excerpt from a page data object.
+ *
  * @param pageData
  */
 const getExcerpt = pageData => {
@@ -58,6 +71,7 @@ const getExcerpt = pageData => {
 
 /**
  * Get all files in a category from File nodes.
+ *
  * @param nodes
  * @param pattern
  * @param parent
@@ -73,7 +87,7 @@ const getPages = (nodes, pattern, parent, actions) => {
     .filter(node => node.internal.type === 'File' && node.extension === 'md')
     .filter(node => minimatch(node.relativeDirectory, pattern))
     .forEach(node => {
-      const pageData = getPageData(node, actions);
+      const pageData = getMarkdownData(node, actions);
 
       const slug = node.relativePath.replace(/\.md$/, '');
       const excerpt = getExcerpt(pageData);
@@ -114,6 +128,7 @@ const getPages = (nodes, pattern, parent, actions) => {
 
 /**
  * Get a single page by `slug`.
+ *
  * @param nodes
  * @param slug
  */
@@ -137,6 +152,7 @@ const getCategoryData = (node, actions) => {
 
 /**
  * Parse all file nodes to categories and return the categories and pages.
+ *
  * @param nodes
  * @param pattern
  * @param parent
@@ -194,6 +210,69 @@ const getCategories = (nodes, pattern, parent, actions) => {
     });
 };
 
+/**
+ * Create a new troubleshooter node including all sub-nodes.
+ *
+ * @param nodes
+ * @param parent
+ * @param isFirst
+ * @param actions
+ * @returns {*}
+ */
+const createTroubleshooterNode = (nodes, parent, isFirst, actions) => {
+  const { createNode, createParentChildLink } = actions;
+
+  const parentMarkdown = getMarkdownData(parent, actions);
+  const parentNode = createNodeData(
+    {
+      title: parentMarkdown.frontmatter.title,
+      description: parentMarkdown.frontmatter.description,
+      priority: parentMarkdown.frontmatter.priority || 0,
+      absolutePath: parent.absolutePath,
+      relativePath: parent.relativePath,
+      slug: isFirst
+        ? 'troubleshooter'
+        : `troubleshooter/${createHash(parent.relativePath).slice(0, 8)}`
+    },
+    `troubleshooter-node-${parent.relativeDirectory || 'root'}`,
+    'TroubleshooterNode',
+    actions
+  );
+  createNode(parentNode);
+
+  nodes.filter(node => minimatch(node.dir, `${parent.dir}/*`)).map(node => {
+    const subNode = createTroubleshooterNode(nodes, node, false, actions);
+    subNode.parent = parentNode.id;
+    subNode.parentSlug = parentNode.slug;
+
+    createParentChildLink({ parent: parentNode, child: subNode });
+  });
+
+  return parentNode;
+};
+
+/**
+ * Register all troubleshooter nodes as GraphQL node.
+ *
+ * @param allNodes
+ * @param pattern
+ * @param actions
+ */
+const getTroubleshooterNodes = (allNodes, pattern, actions) => {
+  const { reporter } = actions;
+
+  const nodes = allNodes.filter(
+    node => node.internal.type === 'File' && node.sourceInstanceName === 'troubleshooter'
+  );
+
+  const parent = nodes.find(node => node.relativeDirectory === pattern);
+  if (!parent) {
+    return reporter.warn('No troubleshooter content found');
+  }
+
+  createTroubleshooterNode(nodes, parent, true, actions);
+};
+
 const registerLinks = (nodes, actions) => {
   const { createNode, createParentChildLink } = actions;
 
@@ -220,11 +299,14 @@ const registerLinks = (nodes, actions) => {
     });
 };
 
-module.exports = ({ getNodes, getNode, createNodeId, actions }) => {
+module.exports = ({ actions, getNodes, ...rest }) => {
+  const gatsbyActions = { getNodes, ...actions, ...rest };
+
   const nodes = getNodes();
-  getCategories(nodes, '*', null, { ...actions, getNode, createNodeId });
+  getCategories(nodes, '*', null, gatsbyActions);
+  getTroubleshooterNodes(nodes, '', gatsbyActions);
 
   // Get nodes including new categories and pages
   const newNodes = getNodes();
-  registerLinks(newNodes, { ...actions, getNode, createNodeId });
+  registerLinks(newNodes, gatsbyActions);
 };
