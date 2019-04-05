@@ -19,6 +19,7 @@ module.exports = {
     'gatsby-plugin-sharp',
     'gatsby-plugin-remove-trailing-slashes',
     'gatsby-plugin-catch-links',
+    'gatsby-plugin-robots-txt',
     {
       resolve: 'gatsby-source-filesystem',
       options: {
@@ -95,6 +96,12 @@ module.exports = {
         matomoUrl: 'https://analytics.mycryptoapi.com',
         siteUrl: 'https://support.mycrypto.com/',
         disableCookies: true
+      }
+    },
+    {
+      resolve: 'gatsby-plugin-canonical-urls',
+      options: {
+        siteUrl: 'https://support.mycrypto.com'
       }
     }
   ]
