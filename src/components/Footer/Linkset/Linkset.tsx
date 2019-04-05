@@ -30,7 +30,7 @@ const LINK_COLUMNS: Column[] = [
       },
       {
         title: 'Press',
-        link: 'mailto://press@mycrypto.com'
+        link: 'mailto:press@mycrypto.com'
       },
       {
         title: 'Privacy Policy',
