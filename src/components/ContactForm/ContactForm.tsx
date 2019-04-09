@@ -2,6 +2,7 @@ import * as React from 'react';
 import Recaptcha from 'react-google-recaptcha';
 import { object, string, ValidationError } from 'yup';
 import { graphql, StaticQuery } from 'gatsby';
+import SubjectField from './SubjectField';
 
 interface State {
   formData: {
@@ -97,35 +98,7 @@ export default class ContactForm extends React.PureComponent<{}, State> {
           />
         </div>
 
-        <div className={`field full-width ${errors.includes('subject') ? 'error' : ''}`}>
-          <label htmlFor="form-subject">Subject</label>
-          <select
-            id="form-subject"
-            name="subject"
-            value={this.state.formData.subject}
-            onChange={this.handleChange}
-          >
-            <option value="">What can we help you with?</option>
-            <option>Accessing wallet</option>
-            <option>Adding tokens</option>
-            <option>Coinbase buy widget</option>
-            <option>ENS</option>
-            <option>Exchanging / exchanges</option>
-            <option>Getting started</option>
-            <option>Keystore file</option>
-            <option>Ledger or TREZOR</option>
-            <option>Lost ETH / phishing / scam</option>
-            <option>Lost password</option>
-            <option>Lost private key</option>
-            <option>MetaMask</option>
-            <option>Nodes / networks</option>
-            <option>Private key</option>
-            <option>Sending transactions</option>
-            <option>Sending tokens</option>
-            <option>Swap</option>
-            <option>Other</option>
-          </select>
-        </div>
+        <SubjectField onChange={this.handleChange} hasError={errors.includes('subject')} />
 
         <div className={`field full-width ${errors.includes('body') ? 'error' : ''}`}>
           <label htmlFor="form-body">More details</label>
